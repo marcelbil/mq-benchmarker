@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <title>Artemis Benchmark Suite</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #1e1e1e; color: #eee; margin: 0; padding: 20px; }
+        .container { max-width: 1200px; margin: auto; }
+        .card { background: #2d2d2d; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        h1, h2 { color: #4CAF50; margin-top: 0; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+        label { display: block; margin-top: 12px; font-size: 0.85em; color: #bbb; text-transform: uppercase; letter-spacing: 0.5px;}
+        input, select { width: 100%; padding: 10px; margin-top: 5px; background: #1a1a1a; border: 1px solid #444; color: #fff; border-radius: 4px; box-sizing: border-box;}
+        button { background: #4CAF50; color: white; padding: 15px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 1.1em; width: 100%; margin-top: 20px; font-weight: bold;}
+        button.stop { background: #f44336; }
+        button:hover { opacity: 0.9; }
+        .stats { display: flex; justify-content: space-around; font-size: 1.5em; text-align: center; margin-top: 10px; }
+        .stat-box { background: #1a1a1a; padding: 20px; border-radius: 8px; border: 1px solid #444; width: 30%; }
+        .stat-value { font-size: 2.2em; color: #4CAF50; font-weight: bold; margin: 10px 0;}
+        /* NIEUW: Terminal Styling */
+        #terminal { background: #000; color: #0f0; font-family: 'Courier New', Courier, monospace; padding: 15px; border-radius: 4px; height: 180px; overflow-y: auto; font-size: 0.9em; white-space: pre-wrap; border: 1px solid #333; margin-top: 10px; line-height: 1.4; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Artemis Web Benchmark</h1>
+        
+        <div class="grid">
+            <div class="card">
+                <h2>🔌 Broker Connectie</h2>
+                <label>Broker URL</label>
+                <input type="text" id="brokerUrl" value="tcp://mqart01.mqlabs.io:61616">
+                
+                <label>Protocol</label>
+                <select id="protocol">
+                    <option value="CORE" selected>Artemis CORE</option>
+                    <option value="AMQP">AMQP 1.0</option>
+                </select>
+
+                <label>Gebruikersnaam</label>
+                <input type="text" id="username" value="artemis">
+                
+                <label>Wachtwoord</label>
+                <input type="password" id="password" value="artemis">
+            </div>
+
+            <div class="card">
+                <h2>⚙️ Architectuur</h2>
+                <label>Rol (cphtestp modus)</label>
+                <select id="role">
+                    <option value="SENDER">SENDER (Vuurt af & vergeet)</option>
+                    <option value="RECEIVER">RECEIVER (Luistert & gooit weg)</option>
+                    <option value="REQUESTER">REQUESTER (Zendt & Wacht op antwoord)</option>
+                    <option value="RESPONDER">RESPONDER (Luistert & Stuurt antwoord)</option>
+                    <option value="BOTH" selected>BOTH (Los zenden & ontvangen)</option>
+                </select>
+                <label>Max Connecties (TCP Pool)</label>
+                <input type="number" id="maxConnections" value="1000">
+                <label>Aantal Producer Threads</label>
+                <input type="number" id="producerThreads" value="10">
+                <label>Aantal Consumer Threads</label>
+                <input type="number" id="consumerThreads" value="20">
+                <label>Aantal Queues</label>
+                <input type="number" id="queues" value="5">
+                <label style="color: #ff9800;">Beheer</label>
+                <select id="purgeQueues">
+                    <option value="true" selected>Ja, leeg queues vóór de test (Purge)</option>
+                    <option value="false">Nee, laat oude berichten staan</option>
+                </select>
+            </div>
+
+            <div class="card">
+                <h2>📦 Volume & Tuning</h2>
+                <label>Stop Conditie</label>
+                <select id="stopCondition" onchange="toggleCondition()">
+                    <option value="messages">Na X Aantal Berichten</option>
+                    <option value="time" selected>Na X Seconden (Tijdsduur)</option>
+                </select>
+                <div id="divMessages" style="display: none;">
+                    <label>Totaal berichten</label>
+                    <input type="number" id="totalMessages" value="500000">
+                </div>
+                <div id="divTime">
+                    <label>Duur in seconden (Soak test)</label>
+                    <input type="number" id="duration" value="60">
+                </div>
+                <label>Payload Grootte</label>
+                <select id="payloadSize">
+                    <option value="512">512 Bytes</option>
+                    <option value="1024">1 KB (1024 Bytes)</option>
+                    <option value="2048">2 KB (2048 Bytes)</option>
+                    <option value="4096" selected>4 KB (4096 Bytes)</option>
+                    <option value="8196">8 KB (8192 Bytes)</option>
+                </select>
+                <label>Persistentie</label>
+                <select id="persistent">
+                    <option value="true" selected>Ja (Persistent)</option>
+                    <option value="false">Nee (Non-Persistent)</option>
+                </select>
+                <label>Batch Transacties</label>
+                <select id="txEnabled">
+                    <option value="true" selected>Ja (Max Throughput)</option>
+                    <option value="false">Nee (Per bericht)</option>
+                </select>
+            </div>
+        </div>
+
+        <button id="startBtn" onclick="startBenchmark()">Start Benchmark</button>
+        <button id="stopBtn" class="stop" onclick="stopBenchmark()" style="display:none;">Stop Benchmark</button>
+
+        <div class="card" style="margin-top: 20px;">
+            <h2>📊 Live Statistieken <span id="timeRemaining" style="float:right; color:#03A9F4; font-size:0.6em; margin-top:10px;"></span></h2>
+            <div class="stats">
+                <div class="stat-box">
+                    <div>Geproduceerd</div>
+                    <div class="stat-value" id="valProduced">0</div>
+                    <div id="rateProduced" style="color:#aaa; font-size: 0.6em;">0 msg/s</div>
+                </div>
+                <div class="stat-box">
+                    <div>Geconsumeerd</div>
+                    <div class="stat-value" id="valConsumed">0</div>
+                    <div id="rateConsumed" style="color:#aaa; font-size: 0.6em;">0 msg/s</div>
+                </div>
+                <div class="stat-box">
+                    <div>Status</div>
+                    <div class="stat-value" id="valStatus" style="color: #ff9800;">IDLE</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top: 20px;">
+            <h2>🖥️ Live Console (Laatste acties)</h2>
+            <div id="terminal">[Systeem] Dashboard geladen. Wachten op input...</div>
+        </div>
+    </div>
+
+    <script>
+        let pollInterval;
+
+        function toggleCondition() {
+            const isTime = document.getElementById('stopCondition').value === 'time';
+            document.getElementById('divTime').style.display = isTime ? 'block' : 'none';
+            document.getElementById('divMessages').style.display = isTime ? 'none' : 'block';
+        }
+
+        function startBenchmark() {
+            try {
+                const config = {
+                    brokerUrl: document.getElementById('brokerUrl').value,
+                    username: document.getElementById('username').value,
+                    password: document.getElementById('password').value,
+                    protocol: document.getElementById('protocol').value,
+                    role: document.getElementById('role').value,
+                    maxConnections: document.getElementById('maxConnections').value,
+                    producerThreads: document.getElementById('producerThreads').value,
+                    consumerThreads: document.getElementById('consumerThreads').value,
+                    queues: document.getElementById('queues').value,
+                    stopCondition: document.getElementById('stopCondition').value,
+                    totalMessages: document.getElementById('totalMessages').value,
+                    duration: document.getElementById('duration').value,
+                    payloadSize: document.getElementById('payloadSize').value,
+                    txEnabled: document.getElementById('txEnabled').value,
+                    persistent: document.getElementById('persistent').value,
+                    purgeQueues: document.getElementById('purgeQueues').value
+                };
+
+                fetch('/api/benchmark/start', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(config)
+                }).then(response => {
+                    if (response.redirected && response.url.includes('/login')) {
+                        window.location.href = '/login.html'; return;
+                    }
+                    if (response.ok) {
+                        document.getElementById('startBtn').style.display = 'none';
+                        document.getElementById('stopBtn').style.display = 'block';
+                        pollInterval = setInterval(fetchStats, 1000);
+                    }
+                }).catch(err => alert("Netwerkfout bij bereiken backend: " + err));
+            } catch (err) {
+                alert("Fout in Javascript: " + err);
+            }
+        }
+
+        function stopBenchmark() {
+            document.getElementById('startBtn').style.display = 'block';
+            document.getElementById('stopBtn').style.display = 'none';
+            document.getElementById('timeRemaining').innerText = "";
+            document.getElementById('valStatus').innerText = "STOPPING...";
+            document.getElementById('valStatus').style.color = "#ff9800";
+            clearInterval(pollInterval);
+
+            fetch('/api/benchmark/stop', { method: 'POST' })
+                .then(() => { fetchStats(); })
+                .catch(err => console.log("Stop request genegeerd: " + err));
+        }
+
+        function fetchStats() {
+            fetch('/api/benchmark/stats')
+                .then(res => {
+                    if (res.redirected) { window.location.href = '/login.html'; return null; }
+                    return res.json();
+                })
+                .then(data => {
+                    if(!data) return;
+                    document.getElementById('valProduced').innerText = data.produced;
+                    document.getElementById('rateProduced').innerText = data.producedRate + " msg/s";
+                    document.getElementById('valConsumed').innerText = data.consumed;
+                    document.getElementById('rateConsumed').innerText = data.consumedRate + " msg/s";
+                    
+                    if (data.running && data.purging) {
+                        document.getElementById('valStatus').innerText = "PURGING...";
+                        document.getElementById('valStatus').style.color = "#03A9F4";
+                        document.getElementById('timeRemaining').innerText = "Oude berichten wissen...";
+                    } else if (data.running && !data.purging) {
+                        document.getElementById('valStatus').innerText = "RUNNING";
+                        document.getElementById('valStatus').style.color = "#4CAF50";
+                        if (data.timeRemaining > 0) {
+                            document.getElementById('timeRemaining').innerText = "Resterend: " + data.timeRemaining + " sec";
+                        } else {
+                            document.getElementById('timeRemaining').innerText = "";
+                        }
+                    } else {
+                        document.getElementById('valStatus').innerText = "STOPPED";
+                        document.getElementById('valStatus').style.color = "#ff9800";
+                        document.getElementById('timeRemaining').innerText = "";
+                        if (document.getElementById('startBtn').style.display === 'none') {
+                            stopBenchmark();
+                        }
+                    }
+
+                    // NIEUW: Render de Console Logs
+                    if (data.logs && data.logs.length > 0) {
+                        const terminal = document.getElementById('terminal');
+                        terminal.innerHTML = data.logs.join('\n');
+                        terminal.scrollTop = terminal.scrollHeight; // Auto-scroll naar beneden
+                    }
+                }).catch(e => console.log("Stats fetch error"));
+        }
+    </script>
+</body>
+</html>
