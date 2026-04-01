@@ -1,3 +1,18 @@
+/*
+ * Copyright 2026 Prospectum-ICT
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.marcelbil.mqbenchmarker;
 
 import jakarta.jms.*;
@@ -14,6 +29,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedDeque;
@@ -27,7 +43,6 @@ public class BenchmarkEngine implements MessageListener {
 
     private static final Logger logger = LoggerFactory.getLogger(BenchmarkEngine.class);
 
-    // NIEUW: Buffer voor de laatste 15 logregels voor de webinterface
     private final ConcurrentLinkedDeque<String> uiLogs = new ConcurrentLinkedDeque<>();
     private static final int MAX_LOG_LINES = 15;
 
@@ -52,8 +67,7 @@ public class BenchmarkEngine implements MessageListener {
     private String currentRole;
 
     public BenchmarkEngine() {
-        // Geef een eerste logregel bij het opstarten
-        addUiLog("Applicatie succesvol opgestart. Klaar voor gebruik.");
+        addUiLog("Application started successfully. Ready for use.");
 
         new Thread(() -> {
             while (true) {
@@ -70,7 +84,7 @@ public class BenchmarkEngine implements MessageListener {
                         if (isTimeBased && targetDurationSec > 0) {
                             long elapsedSec = (System.currentTimeMillis() - startTime) / 1000;
                             if (elapsedSec >= targetDurationSec) {
-                                addUiLog("Tijdslimiet van " + targetDurationSec + "s bereikt. Test wordt afgebroken.");
+                                addUiLog("Time limit of " + targetDurationSec + "s reached. Aborting test.");
                                 stop();
                             }
                         }
@@ -83,9 +97,8 @@ public class BenchmarkEngine implements MessageListener {
         }).start();
     }
 
-    // NIEUW: Helper methode om zowel naar console als UI te loggen
     private void addUiLog(String message) {
-        logger.info(message); // Nog steeds in Docker log
+        logger.info(message);
         String time = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
         uiLogs.addLast("[" + time + "] " + message);
         if (uiLogs.size() > MAX_LOG_LINES) {
@@ -95,10 +108,10 @@ public class BenchmarkEngine implements MessageListener {
 
     public synchronized void start(Map<String, String> config) {
         String role = config.get("role");
-        addUiLog("➡️ Start-verzoek ontvangen voor Rol: " + role);
+        addUiLog("➡️ Start request received for Role: " + role);
 
         if (isRunning.get() || isPurging.get()) {
-            addUiLog("⚠️ Verzoek genegeerd: Engine draait of purget al.");
+            addUiLog("⚠️ Request ignored: Engine is already running or purging.");
             return;
         }
 
@@ -131,13 +144,12 @@ public class BenchmarkEngine implements MessageListener {
 
                 if ("AMQP".equalsIgnoreCase(protocol)) {
                     String cleanUrl = brokerUrl.split("\\?")[0];
-                    // FORCEER een snelle timeout bij sluiten (5 seconden ipv de default 4 minuten)
                     String amqpUrl = cleanUrl.replace("tcp://", "amqp://") + "?jms.closeTimeout=5000";
                     underlyingFactory = new org.apache.qpid.jms.JmsConnectionFactory(username, password, amqpUrl);
-                    addUiLog("🔌 Verbinden via AMQP 1.0 -> " + amqpUrl);
+                    addUiLog("🔌 Connecting via AMQP 1.0 -> " + amqpUrl);
                 } else {
-                    underlyingFactory = new org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory(brokerUrl, username, password);
-                    addUiLog("🔌 Verbinden via Artemis CORE -> " + brokerUrl);
+                    underlyingFactory = new ActiveMQConnectionFactory(brokerUrl, username, password);
+                    addUiLog("🔌 Connecting via Artemis CORE -> " + brokerUrl);
                 }
 
                 pooledConnectionFactory = new JmsPoolConnectionFactory();
@@ -160,12 +172,12 @@ public class BenchmarkEngine implements MessageListener {
                 lastConsumed = 0;
                 startTime = System.currentTimeMillis(); 
 
-                addUiLog("🚀 Start Benchmark Verkeer! Rol: " + currentRole);
+                addUiLog("🚀 Starting Benchmark Traffic! Role: " + currentRole);
 
                 if (!currentRole.equals("SENDER")) {
                     for (int i = 1; i <= queues; i++) {
                         DefaultMessageListenerContainer container = new DefaultMessageListenerContainer();
-                        container.setConnectionFactory(pooledConnectionFactory);
+                        container.setConnectionFactory(Objects.requireNonNull(pooledConnectionFactory));
                         String listenQueue = currentRole.equals("REQUESTER") ? "benchmark.q." + i + ".REPLY" : "benchmark.q." + i;
                         container.setDestinationName(listenQueue);
                         container.setConcurrentConsumers(cThreads);
@@ -190,14 +202,14 @@ public class BenchmarkEngine implements MessageListener {
                     }
                 }
             } catch (Exception e) {
-                addUiLog("❌ Fout bij het opstarten: " + e.getMessage());
+                addUiLog("❌ Error during startup: " + e.getMessage());
                 stop();
             }
         }).start();
     }
 
     private void drainQueuesParallel(int queues) {
-        addUiLog("🧹 Start PARALLEL purge van " + queues + " queues inclusief reply-queues...");
+        addUiLog("🧹 Starting PARALLEL purge of " + queues + " queues including reply queues...");
         ExecutorService purgeExecutor = Executors.newFixedThreadPool(queues * 2); 
         List<CompletableFuture<Void>> futures = new ArrayList<>();
         AtomicInteger totalDrained = new AtomicInteger(0);
@@ -227,11 +239,11 @@ public class BenchmarkEngine implements MessageListener {
 
         CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
         purgeExecutor.shutdown();
-        addUiLog("✅ Purge voltooid! Totaal " + totalDrained.get() + " oude berichten verwijderd.");
+        addUiLog("✅ Purge complete! Total of " + totalDrained.get() + " old messages removed.");
     }
 
     private void produceLoop(String queueName, int msgsToSend, int payloadSize, boolean txEnabled, boolean persistent) {
-        JmsTemplate template = new JmsTemplate(pooledConnectionFactory);
+        JmsTemplate template = new JmsTemplate(Objects.requireNonNull(pooledConnectionFactory));
         template.setSessionTransacted(txEnabled);
         String payload = "x".repeat(Math.max(1, payloadSize));
         int batchSize = txEnabled ? 1000 : 1;
@@ -274,8 +286,8 @@ public class BenchmarkEngine implements MessageListener {
         consumedCount.incrementAndGet();
         try {
             if (currentRole.equals("RESPONDER") && message.getJMSReplyTo() != null) {
-                JmsTemplate replyTemplate = new JmsTemplate(pooledConnectionFactory);
-                replyTemplate.send(message.getJMSReplyTo(), session -> {
+                JmsTemplate replyTemplate = new JmsTemplate(Objects.requireNonNull(pooledConnectionFactory));
+                replyTemplate.send(Objects.requireNonNull(message.getJMSReplyTo()), session -> {
                     TextMessage replyMsg = session.createTextMessage("REPLY_OK");
                     replyMsg.setJMSCorrelationID(message.getJMSCorrelationID());
                     return replyMsg;
@@ -288,42 +300,57 @@ public class BenchmarkEngine implements MessageListener {
     public synchronized void stop() {
         if (!isRunning.get() && !isPurging.get()) return;
         
+        // 1. Zet direct de vlaggen op false. De produceLoop() ziet dit en 
+        // stopt na zijn huidige message of batch.
         isRunning.set(false);
         isPurging.set(false);
         
-        addUiLog("⏳ Graceful shutdown gestart...");
+        addUiLog("⏳ Graceful shutdown initiated. Finishing active batches...");
 
-        if (producerExecutor != null) {
-            producerExecutor.shutdownNow(); 
-        }
-
-        if (!consumerContainers.isEmpty()) {
-            addUiLog("⏳ Consumers afsluiten...");
-            for (DefaultMessageListenerContainer c : consumerContainers) {
+        // 2. We starten een aparte achtergrond-thread voor het opruimen, 
+        // zodat de Web UI (en de stop-knop) direct antwoord krijgt en niet bevriest.
+        new Thread(() -> {
+            if (producerExecutor != null) {
+                producerExecutor.shutdown(); // Geen nieuwe taken accepteren, huidige afmaken
                 try {
-                    c.stop(); 
-                    c.shutdown(); 
-                } catch (Exception e) {}
+                    // Geef de threads 5 seconden om netjes hun werk af te ronden
+                    if (!producerExecutor.awaitTermination(30, java.util.concurrent.TimeUnit.SECONDS)) {
+                        addUiLog("⚠️ Some threads took too long. Forcing shutdown...");
+                        producerExecutor.shutdownNow();
+                    } else {
+                        addUiLog("✅ Producer threads gracefully finished and stopped.");
+                    }
+                } catch (InterruptedException e) {
+                    producerExecutor.shutdownNow();
+                    Thread.currentThread().interrupt();
+                }
             }
-            consumerContainers.clear();
-            addUiLog("✅ Alle consumers zijn gestopt.");
-        }
-        
-        if (pooledConnectionFactory != null) {
-            final JmsPoolConnectionFactory factoryToClose = pooledConnectionFactory;
-            pooledConnectionFactory = null;
+
+            if (!consumerContainers.isEmpty()) {
+                addUiLog("⏳ Shutting down consumers gracefully...");
+                for (DefaultMessageListenerContainer c : consumerContainers) {
+                    try {
+                        c.stop(); 
+                        c.shutdown(); 
+                    } catch (Exception e) {}
+                }
+                consumerContainers.clear();
+                addUiLog("✅ All consumers cleanly disconnected.");
+            }
             
-            new Thread(() -> {
+            if (pooledConnectionFactory != null) {
+                final JmsPoolConnectionFactory factoryToClose = pooledConnectionFactory;
+                pooledConnectionFactory = null;
                 try {
                     factoryToClose.stop();
-                    addUiLog("✅ Connectie-pool netjes gesloten.");
+                    addUiLog("✅ Connection pool closed gracefully.");
                 } catch (Exception e) {
-                    addUiLog("⚠️ Connectie-pool sloot met een timeout (AMQP geforceerd afgesloten).");
+                    addUiLog("⚠️ Connection pool closed with a timeout.");
                 }
-            }).start();
-        }
-        
-        addUiLog("🏁 Benchmark volledig en schoon afgesloten.");
+            }
+            
+            addUiLog("🏁 Benchmark completely and cleanly shut down.");
+        }).start();
     }
 
     public Map<String, Object> getStats() {
@@ -341,7 +368,7 @@ public class BenchmarkEngine implements MessageListener {
             "producedRate", currentProducedRate,
             "consumedRate", currentConsumedRate,
             "timeRemaining", remaining,
-            "logs", new ArrayList<>(uiLogs) // Stuur de terminal logs mee!
+            "logs", new ArrayList<>(uiLogs)
         );
     }
 }

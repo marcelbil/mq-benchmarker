@@ -10,9 +10,9 @@
     </parent>
 <groupId>com.marcelbil</groupId>
     <artifactId>mq-benchmarker</artifactId>
-    <version>0.0.4</version>
+    <version>0.1.0</version>
     <name>mq-benchmarker</name>
-    <description>MQ Benchmarker: The Universal Benchmarking Tool</description>
+    <description>MQ Benchmarker: The Universal MQ Benchmarking Tool</description>
     <properties>
         <java.version>17</java.version>
     </properties>

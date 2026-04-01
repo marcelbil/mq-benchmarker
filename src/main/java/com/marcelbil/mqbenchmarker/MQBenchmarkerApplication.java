@@ -9,8 +9,8 @@ import org.springframework.jms.annotation.EnableJms;
 // Schakel de automatische Spring Boot connecties uit, wij doen dit dynamisch via de UI!
 @SpringBootApplication(exclude = {ArtemisAutoConfiguration.class, JmsAutoConfiguration.class})
 @EnableJms
-public class ArtemisBenchmarkApplication {
+public class MQBenchmarkerApplication {
     public static void main(String[] args) {
-        SpringApplication.run(ArtemisBenchmarkApplication.class, args);
+        SpringApplication.run(MQBenchmarkerApplication.class, args);
     }
 }

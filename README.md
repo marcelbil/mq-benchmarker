@@ -1,6 +1,6 @@
 # 🚀 MQ Benchmarker
 
-A powerful, universal, and multi-protocol load generator for MQ Brokers *(Version 0.0.3: as Apache Artemis only. Others will follow)*. Designed to stress-test your messaging infrastructure and find its bottlenecks via an intuitive web dashboard. It is recommended to setup Prometheus combined with Grafana or similar to investigate metrics.
+A powerful, universal, and multi-protocol benchmark tool for MQ Brokers *(Version 0.0.3: as Apache Artemis only. Others will follow)*. Designed to stress-test your messaging infrastructure and find its bottlenecks via an intuitive web dashboard. It is recommended to setup Prometheus combined with Grafana or similar to investigate metrics.
 
 ## ✨ Features
 
@@ -30,11 +30,6 @@ Next, open your browser and navigate to [http://localhost:8080](http://localhost
 
 When generating extreme loads, it is highly recommended to limit the container's resources to prevent OOM (Out Of Memory) crashes on the host. Use the `JAVA_TOOL_OPTIONS` and Docker resource limits as shown in the Quick Start guide. This ensures the JVM respects the container boundaries.
 
-## 🛠️ Building from Source
-
-For developers who want to compile this project locally:
-
-```bash
-mvn clean package
-java -jar target/mq-benchmarker-0.0.4.jar
-```
+## 🏢 About the Author
+This open-source project is developed and maintained by **[Prospectum-ICT](https://prospectum-ict.nl)**. 
+We specialize in Enterprise Integration, Middleware, and robust Message Queue architectures. Need help with your messaging infrastructure? Feel free to reach out!
