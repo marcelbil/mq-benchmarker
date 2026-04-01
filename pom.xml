@@ -8,10 +8,11 @@
         <version>3.5.13</version>
         <relativePath/>
     </parent>
-    <groupId>com.example</groupId>
-    <artifactId>artemis-benchmark</artifactId>
+<groupId>com.marcelbil</groupId>
+    <artifactId>mq-benchmarker</artifactId>
     <version>0.0.4</version>
-    <name>artemis-benchmark</name>
+    <name>mq-benchmarker</name>
+    <description>MQ Benchmarker: The Universal Benchmarking Tool</description>
     <properties>
         <java.version>17</java.version>
     </properties>
