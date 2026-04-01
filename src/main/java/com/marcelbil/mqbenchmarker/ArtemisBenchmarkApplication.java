@@ -1,4 +1,4 @@
-package com.example.artemisbenchmark;
+package com.marcelbil.mqbenchmarker;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

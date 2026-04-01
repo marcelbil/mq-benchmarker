@@ -1,4 +1,4 @@
-package com.example.artemisbenchmark;
+package com.marcelbil.mqbenchmarker;
 
 import org.messaginghub.pooled.jms.JmsPoolConnectionFactory;
 import org.springframework.beans.factory.annotation.Value;

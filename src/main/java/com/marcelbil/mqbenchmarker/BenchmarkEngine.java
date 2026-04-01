@@ -1,4 +1,4 @@
-package com.example.artemisbenchmark;
+package com.marcelbil.mqbenchmarker;
 
 import jakarta.jms.*;
 import org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory;
