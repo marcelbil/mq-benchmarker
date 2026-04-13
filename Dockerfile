@@ -13,6 +13,7 @@ RUN mvn package -DskipTests
 # ==========================================
 FROM eclipse-temurin:25-jre-alpine
 WORKDIR /app
+RUN apk update && apk upgrade --no-cache
 RUN addgroup -S mqbenchmarker && adduser -S mqbenchmarker -G mqbenchmarker
 USER mqbenchmarker
 COPY --from=build /app/target/mq-benchmarker-*.jar app.jar
