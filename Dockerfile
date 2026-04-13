@@ -11,7 +11,7 @@ RUN mvn package -DskipTests
 # ==========================================
 # STAGE 2: Run (Minimal Alpine JRE 25)
 # ==========================================
-FROM eclipse-temurin:25-jre-alpine
+FROM eclipse-temurin:26-jre-alpine
 WORKDIR /app
 RUN apk update && apk upgrade --no-cache
 RUN addgroup -S mqbenchmarker && adduser -S mqbenchmarker -G mqbenchmarker

@@ -220,46 +220,49 @@
         }
 
         function fetchStats() {
-            fetch('/api/benchmark/stats')
-                .then(res => {
-                    if (res.redirected) { window.location.href = '/login.html'; return null; }
-                    return res.json();
-                })
-                .then(data => {
-                    if (data.running && data.purging) {
-                        document.getElementById('valStatus').innerText = "PURGING...";
-                        document.getElementById('valStatus').style.color = "#03A9F4";
-                        document.getElementById('timeRemaining').innerText = "Purging old messages...";
-                    } else if (data.running && !data.purging) {
-                        document.getElementById('valStatus').innerText = "RUNNING";
-                        document.getElementById('valStatus').style.color = "#4CAF50";
-                        if (data.timeRemaining > 0) {
-                            document.getElementById('timeRemaining').innerText = "Remaining: " + data.timeRemaining + " sec";
-                        } else {
-                            document.getElementById('timeRemaining').innerText = "";
-                        }
-                    } else if (data.stopping) {
-                        // KIEKJE: Hij is aan het stoppen, UI blijft doordraaien en cijfers updaten!
-                        document.getElementById('valStatus').innerText = "SHUTTING DOWN...";
-                        document.getElementById('valStatus').style.color = "#ff9800";
-                        document.getElementById('timeRemaining').innerText = "Finishing batches...";
-                    } else {
-                        // Nu is hij écht klaar
-                        document.getElementById('valStatus').innerText = "STOPPED";
-                        document.getElementById('valStatus').style.color = "#f44336";
-                        document.getElementById('timeRemaining').innerText = "";
-                        if (document.getElementById('startBtn').style.display === 'none') {
-                            stopBenchmark(); 
-                        }
-                    }
+    fetch('/api/benchmark/stats')
+        .then(res => {
+            if (res.redirected) { window.location.href = '/login.html'; return null; }
+            return res.json();
+        })
+        .then(data => {
+            if (data.running && data.purging) {
+                document.getElementById('valStatus').innerText = "PURGING...";
+                document.getElementById('valStatus').style.color = "#03A9F4";
+                document.getElementById('timeRemaining').innerText = "Purging old messages...";
+            } else if (data.running && !data.purging) {
+                document.getElementById('valStatus').innerText = "RUNNING";
+                document.getElementById('valStatus').style.color = "#4CAF50";
+                if (data.timeRemaining > 0) {
+                    document.getElementById('timeRemaining').innerText = "Remaining: " + data.timeRemaining + " sec";
+                } else {
+                    document.getElementById('timeRemaining').innerText = "";
+                }
+            } else if (data.stopping) {
+                document.getElementById('valStatus').innerText = "SHUTTING DOWN...";
+                document.getElementById('valStatus').style.color = "#ff9800";
+                document.getElementById('timeRemaining').innerText = "Finishing batches...";
+            } else {
+                document.getElementById('valStatus').innerText = "STOPPED";
+                document.getElementById('valStatus').style.color = "#f44336";
+                document.getElementById('timeRemaining').innerText = "";
+                if (document.getElementById('startBtn').style.display === 'none') {
+                    stopBenchmark(); 
+                }
+            }
 
-                    if (data.logs && data.logs.length > 0) {
-                        const terminal = document.getElementById('terminal');
-                        terminal.innerHTML = data.logs.join('\n');
-                        terminal.scrollTop = terminal.scrollHeight;
-                    }
-                }).catch(e => console.log("Stats fetch error"));
-        }
+            document.getElementById('valProduced').innerText = data.produced.toLocaleString();
+            document.getElementById('valConsumed').innerText = data.consumed.toLocaleString();
+            document.getElementById('rateProduced').innerText = data.producedRate.toLocaleString() + " msg/s";
+            document.getElementById('rateConsumed').innerText = data.consumedRate.toLocaleString() + " msg/s";
+
+            if (data.logs && data.logs.length > 0) {
+                const terminal = document.getElementById('terminal');
+                terminal.innerHTML = data.logs.join('\n');
+                terminal.scrollTop = terminal.scrollHeight;
+            }
+        }).catch(e => console.log("Stats fetch error"));
+    }
     </script>
 </body>
 </html>

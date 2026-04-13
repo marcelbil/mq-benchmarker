@@ -30,13 +30,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 @Service
 public class BenchmarkEngine implements MessageListener {
@@ -55,10 +55,13 @@ public class BenchmarkEngine implements MessageListener {
     private AtomicInteger consumedCount = new AtomicInteger(0);
     private int lastProduced = 0;
     private int lastConsumed = 0;
-    private int currentProducedRate = 0;
-    private int currentConsumedRate = 0;
     
-    private long startTime = 0;
+    // De 'volatile' variabelen voor veilige thread-communicatie
+    private volatile int currentProducedRate = 0;
+    private volatile int currentConsumedRate = 0;
+    private volatile long startTime = 0;
+    private volatile long endTime = 0;
+    
     private int targetDurationSec = 0;
     private int targetMessageCount = 0;
     private boolean isTimeBased = false;
@@ -70,11 +73,14 @@ public class BenchmarkEngine implements MessageListener {
     public BenchmarkEngine() {
         addUiLog("Application started successfully. Ready for use.");
 
+        // DE CENTRALE WAAKHOND
         new Thread(() -> {
             while (true) {
                 try {
                     Thread.sleep(1000);
-                    if (isRunning.get() && !isPurging.get()) {
+                    
+                    // 1. Draait de motor, of is hij netjes aan het afsluiten?
+                    if ((isRunning.get() || isStopping.get()) && !isPurging.get()) {
                         int p = producedCount.get();
                         int c = consumedCount.get();
                         currentProducedRate = p - lastProduced;
@@ -82,14 +88,38 @@ public class BenchmarkEngine implements MessageListener {
                         lastProduced = p;
                         lastConsumed = c;
 
-                        if (isTimeBased && targetDurationSec > 0) {
+                        // Check voor time-based stop
+                        if (isTimeBased && targetDurationSec > 0 && isRunning.get()) {
                             long elapsedSec = (System.currentTimeMillis() - startTime) / 1000;
                             if (elapsedSec >= targetDurationSec) {
-                                addUiLog("Time limit of " + targetDurationSec + "s reached. Aborting test.");
+                                addUiLog("⏳ Time limit of " + targetDurationSec + "s reached. Initiating shutdown.");
                                 stop();
                             }
                         }
+                        
+                        // Check voor count-based stop (De grote fix voor BOTH modus!)
+                        if (!isTimeBased && targetMessageCount > 0 && isRunning.get()) {
+                            boolean targetReached = false;
+                            
+                            if (currentRole.equals("SENDER") || currentRole.equals("BOTH") || currentRole.equals("REQUESTER")) {
+                                if (p >= targetMessageCount) targetReached = true;
+                            } else if (currentRole.equals("RESPONDER")) {
+                                if (c >= targetMessageCount) targetReached = true;
+                            }
+                            
+                            if (targetReached) {
+                                addUiLog("🎯 Target count of " + targetMessageCount + " messages reached. Initiating shutdown.");
+                                stop();
+                            }
+                        }
+                    } 
+                    // 2. Test is he-le-maal klaar: Bereken eindgemiddelde
+                    else if (!isRunning.get() && !isStopping.get() && !isPurging.get() && startTime > 0 && endTime > startTime) {
+                        long totalSec = Math.max(1, (endTime - startTime) / 1000);
+                        currentProducedRate = (int) (producedCount.get() / totalSec);
+                        currentConsumedRate = (int) (consumedCount.get() / totalSec);
                     } else {
+                        // In absolute rust of tijdens een purge
                         currentProducedRate = 0;
                         currentConsumedRate = 0;
                     }
@@ -138,6 +168,7 @@ public class BenchmarkEngine implements MessageListener {
         isPurging.set(doPurge);
         isRunning.set(true); 
         startTime = System.currentTimeMillis(); 
+        endTime = 0; // Reset de eindtijd
 
         new Thread(() -> {
             try {
@@ -250,6 +281,9 @@ public class BenchmarkEngine implements MessageListener {
         int batchSize = txEnabled ? 1000 : 1;
         int sent = 0;
         int deliveryMode = persistent ? DeliveryMode.PERSISTENT : DeliveryMode.NON_PERSISTENT;
+        
+        // Razendsnelle, lichte counter voor unieke Correlation ID's
+        AtomicLong correlationCounter = new AtomicLong(0);
 
         while (sent < msgsToSend && isRunning.get() && !isPurging.get()) {
             int currentBatch = Math.min(batchSize, msgsToSend - sent);
@@ -262,7 +296,7 @@ public class BenchmarkEngine implements MessageListener {
                             TextMessage message = session.createTextMessage(payload);
                             if (currentRole.equals("BOTH") || currentRole.equals("REQUESTER")) {
                                 message.setJMSReplyTo(session.createQueue(queueName + ".REPLY"));
-                                message.setJMSCorrelationID(UUID.randomUUID().toString());
+                                message.setJMSCorrelationID(Long.toHexString(System.currentTimeMillis()) + "-" + correlationCounter.incrementAndGet());
                             }
                             producer.send(message);
                         }
@@ -273,13 +307,13 @@ public class BenchmarkEngine implements MessageListener {
                 sent += currentBatch;
                 producedCount.addAndGet(currentBatch);
             } catch (Exception e) {
+                addUiLog("❌ Producer error: " + e.getMessage());
                 break; 
             }
         }
         
-        if (!isTimeBased && (currentRole.equals("SENDER") || currentRole.equals("REQUESTER")) && producedCount.get() >= targetMessageCount) {
-            isRunning.set(false);
-        }
+        // Let op: De check of de doelaantallen zijn behaald is hier weggehaald!
+        // Dat wordt nu centraal in de gaten gehouden door de waakhond in de constructor.
     }
 
     @Override
@@ -309,9 +343,8 @@ public class BenchmarkEngine implements MessageListener {
 
         new Thread(() -> {
             if (producerExecutor != null) {
-                producerExecutor.shutdown(); // Geen nieuwe taken accepteren, huidige afmaken
+                producerExecutor.shutdown(); 
                 try {
-                    // Geef de threads 5 seconden om netjes hun werk af te ronden
                     if (!producerExecutor.awaitTermination(30, java.util.concurrent.TimeUnit.SECONDS)) {
                         addUiLog("⚠️ Some threads took too long. Forcing shutdown...");
                         producerExecutor.shutdownNow();
@@ -348,7 +381,8 @@ public class BenchmarkEngine implements MessageListener {
             }
             
             addUiLog("🏁 Benchmark completely and cleanly shut down.");
-            isStopping.set(false); // <--- ZET HEM UIT ALS ALLES KLAAR IS
+            endTime = System.currentTimeMillis(); // Klok de definitieve eindtijd
+            isStopping.set(false); // Zet de status definitief op STOPPED
         }).start();
     }
 
