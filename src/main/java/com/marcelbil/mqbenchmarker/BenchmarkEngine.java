@@ -50,6 +50,7 @@ public class BenchmarkEngine implements MessageListener {
     
     private AtomicBoolean isRunning = new AtomicBoolean(false);
     private AtomicBoolean isPurging = new AtomicBoolean(false);
+    private AtomicBoolean isStopping = new AtomicBoolean(false);
     private AtomicInteger producedCount = new AtomicInteger(0);
     private AtomicInteger consumedCount = new AtomicInteger(0);
     private int lastProduced = 0;
@@ -298,17 +299,14 @@ public class BenchmarkEngine implements MessageListener {
     }
 
     public synchronized void stop() {
-        if (!isRunning.get() && !isPurging.get()) return;
+        if (!isRunning.get() && !isPurging.get() && !isStopping.get()) return;
         
-        // 1. Zet direct de vlaggen op false. De produceLoop() ziet dit en 
-        // stopt na zijn huidige message of batch.
         isRunning.set(false);
         isPurging.set(false);
+        isStopping.set(true);
         
         addUiLog("⏳ Graceful shutdown initiated. Finishing active batches...");
 
-        // 2. We starten een aparte achtergrond-thread voor het opruimen, 
-        // zodat de Web UI (en de stop-knop) direct antwoord krijgt en niet bevriest.
         new Thread(() -> {
             if (producerExecutor != null) {
                 producerExecutor.shutdown(); // Geen nieuwe taken accepteren, huidige afmaken
@@ -350,6 +348,7 @@ public class BenchmarkEngine implements MessageListener {
             }
             
             addUiLog("🏁 Benchmark completely and cleanly shut down.");
+            isStopping.set(false); // <--- ZET HEM UIT ALS ALLES KLAAR IS
         }).start();
     }
 
@@ -363,6 +362,7 @@ public class BenchmarkEngine implements MessageListener {
         return Map.of(
             "running", isRunning.get(),
             "purging", isPurging.get(),
+            "stopping", isStopping.get(),
             "produced", producedCount.get(),
             "consumed", consumedCount.get(),
             "producedRate", currentProducedRate,
