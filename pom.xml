@@ -5,16 +5,16 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.13</version>
+        <version>4.0.5</version>
         <relativePath/>
     </parent>
 <groupId>com.marcelbil</groupId>
     <artifactId>mq-benchmarker</artifactId>
-    <version>0.1.0</version>
+    <version>0.2.0</version>
     <name>mq-benchmarker</name>
     <description>MQ Benchmarker: The Universal MQ Benchmarking Tool</description>
     <properties>
-        <java.version>17</java.version>
+        <java.version>25</java.version>
     </properties>
     <dependencies>
         <dependency>
