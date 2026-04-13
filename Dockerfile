@@ -1,7 +1,7 @@
 # ==========================================
 # STAGE 1: Build (Met Maven & Java 25)
 # ==========================================
-FROM maven:3.9.8-eclipse-temurin-25-alpine AS build
+FROM maven:3.9.14-eclipse-temurin-25-alpine AS build
 WORKDIR /app
 COPY pom.xml .
 RUN mvn dependency:go-offline
@@ -11,7 +11,7 @@ RUN mvn package -DskipTests
 # ==========================================
 # STAGE 2: Run (Minimal Alpine JRE 25)
 # ==========================================
-FROM eclipse-temurin:25.0.1-jre-alpine
+FROM eclipse-temurin:25-jre-alpine
 WORKDIR /app
 RUN addgroup -S mqbenchmarker && adduser -S mqbenchmarker -G mqbenchmarker
 USER mqbenchmarker
