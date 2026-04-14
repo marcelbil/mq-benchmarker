@@ -4,14 +4,15 @@
     <meta charset="UTF-8">
     <title>MQ Benchmarker</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #1e1e1e; color: #eee; margin: 0; padding: 20px; }
+        body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background-color: #1e1e1e; color: #eee; margin: 0; padding: 20px; }
         .container { max-width: 1200px; margin: auto; }
         .card { background: #2d2d2d; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
-        h1, h2 { color: #4CAF50; margin-top: 0; }
+        h1, h2 { color: #0090c3; margin-top: 0; }
+        .logo { max-height: 100px; display: block; margin: 0 auto 30px left; }
         .grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
         label { display: block; margin-top: 12px; font-size: 0.85em; color: #bbb; text-transform: uppercase; letter-spacing: 0.5px;}
         input, select { width: 100%; padding: 10px; margin-top: 5px; background: #1a1a1a; border: 1px solid #444; color: #fff; border-radius: 4px; box-sizing: border-box;}
-        button { background: #4CAF50; color: white; padding: 15px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 1.1em; width: 100%; margin-top: 20px; font-weight: bold;}
+        button { background: #0052a6; color: white; padding: 15px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 1.1em; width: 100%; margin-top: 20px; font-weight: bold;}
         button.stop { background: #f44336; }
         button:hover { opacity: 0.9; }
         .stats { display: flex; justify-content: space-around; font-size: 1.5em; text-align: center; margin-top: 10px; }
@@ -25,7 +26,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>🚀 MQ Benchmarker</h1>
+        <h1><img src="logo.png" alt="MQ Benchmarker Logo" class="logo"></h1>
         
         <div class="grid">
             <div class="card">
@@ -35,8 +36,8 @@
                 
                 <label>Protocol</label>
                 <select id="protocol">
-                    <option value="CORE" selected>Artemis CORE (Native, Max Speed)</option>
-                    <option value="AMQP">AMQP 1.0 (Open Standard)</option>
+                    <option value="CORE" selected>Artemis CORE</option>
+                    <option value="AMQP">AMQP 1.0</option>
                 </select>
 
                 <label>Username</label>
