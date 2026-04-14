@@ -278,7 +278,7 @@ public class BenchmarkEngine implements MessageListener {
         JmsTemplate template = new JmsTemplate(Objects.requireNonNull(pooledConnectionFactory));
         template.setSessionTransacted(txEnabled);
         String payload = "x".repeat(Math.max(1, payloadSize));
-        int batchSize = txEnabled ? 1000 : 1;
+        int batchSize = txEnabled ? 1 : 1000;
         int sent = 0;
         int deliveryMode = persistent ? DeliveryMode.PERSISTENT : DeliveryMode.NON_PERSISTENT;
         

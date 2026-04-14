@@ -4,177 +4,257 @@
     <meta charset="UTF-8">
     <title>MQ Benchmarker</title>
     <style>
-        body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background-color: #1e1e1e; color: #eee; margin: 0; padding: 20px; }
+        body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background-color: #1e1e1e; color: #eee; margin: 0; padding: 15px; }
         .container { max-width: 1200px; margin: auto; }
-        .card { background: #2d2d2d; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
-        h1, h2 { color: #0090c3; margin-top: 0; }
-        .logo { max-height: 100px; display: block; margin: 0 auto 30px left; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
-        label { display: block; margin-top: 12px; font-size: 0.85em; color: #bbb; text-transform: uppercase; letter-spacing: 0.5px;}
-        input, select { width: 100%; padding: 10px; margin-top: 5px; background: #1a1a1a; border: 1px solid #444; color: #fff; border-radius: 4px; box-sizing: border-box;}
-        button { background: #0052a6; color: white; padding: 15px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 1.1em; width: 100%; margin-top: 20px; font-weight: bold;}
+        .grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; }
+        .card { background: #2d2d2d; padding: 15px; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        h1, h2 { color: #0090c3; margin-top: 0; margin-bottom: 12px; font-size: 1.2em; border-bottom: 1px solid #444; padding-bottom: 8px; }
+        .logo { max-height: 50px; display: block; margin-bottom: 10px; margin: 0 auto 20px left;}
+        .form-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        label { margin: 0; font-size: 0.75em; color: #bbb; text-transform: uppercase; letter-spacing: 0.5px; width: 45%; }
+        input, select { width: 55%; padding: 6px 8px; margin: 0; background: #1a1a1a; border: 1px solid #444; color: #fff; border-radius: 4px; box-sizing: border-box; font-size: 0.85em; }
+        button { background: #0052a6; color: white; padding: 12px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 1.05em; width: 100%; margin-top: 5px; font-weight: bold;}
         button.stop { background: #f44336; }
-        button:hover { opacity: 0.9; }
-        .stats { display: flex; justify-content: space-around; font-size: 1.5em; text-align: center; margin-top: 10px; }
-        .stat-box { background: #1a1a1a; padding: 20px; border-radius: 8px; border: 1px solid #444; width: 30%; }
-        .stat-value { font-size: 2.2em; color: #4CAF50; font-weight: bold; margin: 10px 0;}
-        #terminal { background: #000; color: #0f0; font-family: 'Courier New', Courier, monospace; padding: 15px; border-radius: 4px; height: 180px; overflow-y: auto; font-size: 0.9em; white-space: pre-wrap; border: 1px solid #333; margin-top: 10px; line-height: 1.4; }
-        .footer { text-align: center; margin-top: 40px; margin-bottom: 20px; font-size: 0.85em; color: #888; }
+        .stats { display: flex; justify-content: space-around; font-size: 1em; text-align: center; margin-top: 10px; }
+        .stat-box { background: #1a1a1a; padding: 15px; border-radius: 8px; border: 1px solid #444; width: 30%; }
+        .stat-value { font-size: 2em; color: #4CAF50; font-weight: bold; margin: 5px 0;}
+        #terminal { background: #000; color: #0f0; font-family: 'Courier New', Courier, monospace; padding: 10px; border-radius: 4px; height: 160px; overflow-y: auto; font-size: 0.85em; white-space: pre-wrap; border: 1px solid #333; margin-top: 5px; line-height: 1.3; }
+        .footer { text-align: center; margin-top: 25px; margin-bottom: 10px; font-size: 0.8em; color: #888; }
         .footer a { color: #4CAF50; text-decoration: none; }
-        .footer a:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1><img src="logo.png" alt="MQ Benchmarker Logo" class="logo"></h1>
+        <img src="logo.png" alt="MQ Benchmarker Logo" class="logo">
         
         <div class="grid">
             <div class="card">
-                <h2>🔌 Broker Connection</h2>
-                <label>Broker URL</label>
-                <input type="text" id="brokerUrl" value="tcp://localhost:61616">
-                
-                <label>Protocol</label>
-                <select id="protocol">
-                    <option value="CORE" selected>Artemis CORE</option>
-                    <option value="AMQP">AMQP 1.0</option>
-                </select>
-
-                <label>Username</label>
-                <input type="text" id="username" value="artemis">
-                
-                <label>Password</label>
-                <input type="password" id="password" value="artemis">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid #444; padding-bottom: 8px;">
+                <h2 style="margin: 0; border: none; padding: 0;">🔌 Broker Connection</h2>
+                <img id="brokerLogo" src="logos/artemis.png" alt="Broker Logo" style="height: 30px; opacity: 0.8;">
+            </div>
+                <div class="form-row">
+                    <label>Broker Type</label>
+                    <select id="brokerType" onchange="updateBrokerFields()">
+                        <option value="ARTEMIS" selected>Apache Artemis</option>
+                        <option value="ACTIVEMQ">ActiveMQ Classic</option>
+                        <option value="RABBITMQ">RabbitMQ</option>
+                        <option value="IBMMQ">IBM MQ</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <label>Broker URL</label>
+                    <input type="text" id="brokerUrl" value="tcp://localhost:61616">
+                </div>
+                <div class="form-row">
+                    <label>Protocol</label>
+                    <select id="protocol">
+                        <option value="CORE">Artemis CORE</option>
+                        <option value="AMQP">AMQP 1.0</option>
+                    </select>
+                </div>
+                <div class="form-row" id="divChannel" style="display: none;">
+                    <label>MQ Channel</label>
+                    <input type="text" id="channel" value="DEV.APP.SVRCONN">
+                </div>
+                <div class="form-row">
+                    <label>Username</label>
+                    <input type="text" id="username" value="changeme">
+                </div>
+                <div class="form-row">
+                    <label>Password</label>
+                    <input type="password" id="password" value="password">
+                </div>
             </div>
 
             <div class="card">
                 <h2>⚙️ Architecture</h2>
-                <label>Role (Messaging Pattern)</label>
-                <select id="role">
-                    <option value="SENDER">SENDER (Fire & Forget)</option>
-                    <option value="RECEIVER">RECEIVER (Listen & Discard)</option>
-                    <option value="REQUESTER">REQUESTER (Send & Wait for reply)</option>
-                    <option value="RESPONDER">RESPONDER (Listen & Send reply)</option>
-                    <option value="BOTH" selected>BOTH (Independent send & receive)</option>
-                </select>
-                <label>Max Connections (TCP Pool)</label>
-                <input type="number" id="maxConnections" value="1000">
-                <label>Producer Threads</label>
-                <input type="number" id="producerThreads" value="10">
-                <label>Consumer Threads</label>
-                <input type="number" id="consumerThreads" value="20">
-                <label>Number of Queues</label>
-                <input type="number" id="queues" value="5">
-                <label style="color: #ff9800;">Management</label>
-                <select id="purgeQueues">
-                    <option value="true" selected>Yes, purge queues before test</option>
-                    <option value="false">No, keep existing messages</option>
-                </select>
+                <div class="form-row">
+                    <label>Role</label>
+                    <select id="role" onchange="toggleRole()">
+                        <option value="SENDER">SENDER</option>
+                        <option value="RECEIVER">RECEIVER</option>
+                        <option value="REQUESTER">REQUESTER</option>
+                        <option value="RESPONDER">RESPONDER</option>
+                        <option value="BOTH" selected>BOTH</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <label title="Use {n} for number">Request Pattern</label>
+                    <input type="text" id="queuePattern" value="BENCHMARK.REQUEST.{n}">
+                </div>
+                <div class="form-row" id="divReplyPattern">
+                    <label title="Use {n} for number">Reply Pattern</label>
+                    <input type="text" id="replyQueuePattern" value="BENCHMARK.REPLY.{n}">
+                </div>
+                <div class="form-row">
+                    <label>Max Connections</label>
+                    <input type="number" id="maxConnections" value="20">
+                </div>
+                <div class="form-row">
+                    <label>Producer Threads</label>
+                    <input type="number" id="producerThreads" value="5">
+                </div>
+                <div class="form-row">
+                    <label>Consumer Threads</label>
+                    <input type="number" id="consumerThreads" value="10">
+                </div>
+                <div class="form-row">
+                    <label>Queues</label>
+                    <input type="number" id="queues" value="2">
+                </div>
             </div>
 
             <div class="card">
                 <h2>📦 Volume & Tuning</h2>
-                <label>Stop Condition</label>
-                <select id="stopCondition" onchange="toggleCondition()">
-                    <option value="messages">After X Messages</option>
-                    <option value="time" selected>After X Seconds (Duration)</option>
-                </select>
-                <div id="divMessages" style="display: none;">
+                <div class="form-row">
+                    <label>Stop Condition</label>
+                    <select id="stopCondition" onchange="toggleCondition()">
+                        <option value="messages">After X Messages</option>
+                        <option value="time" selected>After X Seconds</option>
+                    </select>
+                </div>
+                <div id="divMessages" class="form-row" style="display: none;">
                     <label>Total Messages</label>
                     <input type="number" id="totalMessages" value="500000">
                 </div>
-                <div id="divTime">
-                    <label>Duration in seconds (Soak test)</label>
+                <div id="divTime" class="form-row">
+                    <label>Duration (Seconds)</label>
                     <input type="number" id="duration" value="60">
                 </div>
-                
-                <label>Payload Size</label>
-                <select id="payloadSize" onchange="togglePayload()">
-                    <option value="512">512 Bytes</option>
-                    <option value="1024">1 KB (1024 Bytes)</option>
-                    <option value="2048">2 KB (2048 Bytes)</option>
-                    <option value="4096" selected>4 KB (4096 Bytes)</option>
-                    <option value="8192">8 KB (8192 Bytes)</option>
-                    <option value="custom">Custom (Specify Bytes)</option>
-                </select>
-                <div id="divCustomPayload" style="display: none;">
+                <div class="form-row">
+                    <label>Payload Size</label>
+                    <select id="payloadSize" onchange="togglePayload()">
+                        <option value="512">512 Bytes</option>
+                        <option value="1024">1 KB</option>
+                        <option value="2048">2 KB</option>
+                        <option value="4096" selected>4 KB</option>
+                        <option value="8192">8 KB</option>
+                        <option value="custom">Custom</option>
+                    </select>
+                </div>
+                <div id="divCustomPayload" class="form-row" style="display: none;">
                     <label>Custom Size (Bytes)</label>
                     <input type="number" id="customPayloadSize" value="10240">
                 </div>
-
-                <label>Persistence</label>
-                <select id="persistent">
-                    <option value="true" selected>Yes (Persistent)</option>
-                    <option value="false">No (Non-Persistent)</option>
-                </select>
-                <label>Batch Transactions</label>
-                <select id="txEnabled">
-                    <option value="true" selected>Yes (Max Throughput)</option>
-                    <option value="false">No (Per message)</option>
-                </select>
+                <div class="form-row">
+                    <label>Persistence</label>
+                    <select id="persistent">
+                        <option value="true" selected>Persistent</option>
+                        <option value="false">Non-Persistent</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <label>Transactionality</label>
+                    <select id="txEnabled">
+                        <option value="true" selected>Yes (Commit per msg)</option>
+                        <option value="false">No (Batched, per 1000)</option>
+                    </select>
+                </div>
             </div>
         </div>
 
         <button id="startBtn" onclick="startBenchmark()">Start Benchmark</button>
         <button id="stopBtn" class="stop" onclick="stopBenchmark()" style="display:none;">Stop Benchmark</button>
 
-        <div class="card" style="margin-top: 20px;">
-            <h2>📊 Live Statistics <span id="timeRemaining" style="float:right; color:#03A9F4; font-size:0.6em; margin-top:10px;"></span></h2>
+        <div class="card" style="margin-top: 15px;">
+            <h2>📊 Live Statistics <span id="timeRemaining" style="float:right; color:#03A9F4; font-size:0.7em; margin-top:2px;"></span></h2>
             <div class="stats">
                 <div class="stat-box">
-                    <div>Produced</div>
+                    <div style="font-size: 0.8em; color: #bbb;">PRODUCED</div>
                     <div class="stat-value" id="valProduced">0</div>
-                    <div id="rateProduced" style="color:#aaa; font-size: 0.6em;">0 msg/s</div>
+                    <div id="rateProduced" style="color:#aaa; font-size: 0.75em;">0 msg/s</div>
                 </div>
                 <div class="stat-box">
-                    <div>Consumed</div>
+                    <div style="font-size: 0.8em; color: #bbb;">CONSUMED</div>
                     <div class="stat-value" id="valConsumed">0</div>
-                    <div id="rateConsumed" style="color:#aaa; font-size: 0.6em;">0 msg/s</div>
+                    <div id="rateConsumed" style="color:#aaa; font-size: 0.75em;">0 msg/s</div>
                 </div>
                 <div class="stat-box">
-                    <div>Status</div>
+                    <div style="font-size: 0.8em; color: #bbb;">STATUS</div>
                     <div class="stat-value" id="valStatus" style="color: #ff9800;">IDLE</div>
                 </div>
             </div>
         </div>
 
-        <div class="card" style="margin-top: 20px;">
-            <h2>🖥️ Live Console (Recent actions)</h2>
-            <div id="terminal">[System] Dashboard loaded. Waiting for input...</div>
+        <div class="card" style="margin-top: 15px;">
+            <h2>🖥️ Live Console</h2>
+            <div id="terminal">[System] Dashboard loaded.</div>
         </div>
         
-        <div class="footer">
-            Developed & Maintained by <a href="https://prospectum-ict.nl" target="_blank">Prospectum-ICT</a>
-        </div>
+    <div style="position: fixed; bottom: 20px; left: 0; width: 100%; text-align: center; font-size: 0.8em; color: #888;">
+    Developed & Maintained by <a href="https://prospectum-ict.nl" target="_blank" style="color: #0090c3; text-decoration: none;">Prospectum-ICT</a>
+    </div>
     </div>
 
     <script>
         let pollInterval;
 
-        function toggleCondition() {
-            const isTime = document.getElementById('stopCondition').value === 'time';
-            document.getElementById('divTime').style.display = isTime ? 'block' : 'none';
-            document.getElementById('divMessages').style.display = isTime ? 'none' : 'block';
+        function updateBrokerFields() {
+            const type = document.getElementById('brokerType').value;
+            const protocolSelect = document.getElementById('protocol');
+            const brokerUrl = document.getElementById('brokerUrl');
+            const divChannel = document.getElementById('divChannel');
+            const brokerLogo = document.getElementById('brokerLogo');
+            
+            // Leeg de huidige protocollen
+            protocolSelect.innerHTML = '';
+
+            if (type === 'ARTEMIS') {
+                protocolSelect.innerHTML = '<option value="CORE">Artemis CORE</option><option value="AMQP">AMQP 1.0</option>';
+                brokerUrl.value = 'tcp://localhost:61616';
+                divChannel.style.display = 'none';
+                brokerLogo.src = 'logos/artemis.png';
+            } else if (type === 'ACTIVEMQ') {
+                protocolSelect.innerHTML = '<option value="OPENWIRE">OpenWire</option><option value="AMQP">AMQP 1.0</option>';
+                brokerUrl.value = 'tcp://localhost:61616';
+                divChannel.style.display = 'none';
+                brokerLogo.src = 'logos/activemq.png';
+            } else if (type === 'RABBITMQ') {
+                protocolSelect.innerHTML = '<option value="AMQP">AMQP 1.0</option>';
+                brokerUrl.value = 'amqp://localhost:5672';
+                divChannel.style.display = 'none';
+                brokerLogo.src = 'logos/rabbitmq.png';
+            } else if (type === 'IBMMQ') {
+                protocolSelect.innerHTML = '<option value="MQI">MQI (Native)</option>';
+                brokerUrl.value = 'tcp://localhost:1414';
+                divChannel.style.display = 'flex';
+                brokerLogo.src = 'logos/ibmmq.png';
+            }
         }
 
-        // NIEUW: Toggle logica voor het custom payload veld
+        function toggleRole() {
+            const role = document.getElementById('role').value;
+            const needsReply = (role === 'REQUESTER' || role === 'RESPONDER' || role === 'BOTH');
+            document.getElementById('divReplyPattern').style.display = needsReply ? 'flex' : 'none';
+        }
+
+        function toggleCondition() {
+            const isTime = document.getElementById('stopCondition').value === 'time';
+            document.getElementById('divTime').style.display = isTime ? 'flex' : 'none';
+            document.getElementById('divMessages').style.display = isTime ? 'none' : 'flex';
+        }
+
         function togglePayload() {
             const isCustom = document.getElementById('payloadSize').value === 'custom';
-            document.getElementById('divCustomPayload').style.display = isCustom ? 'block' : 'none';
+            document.getElementById('divCustomPayload').style.display = isCustom ? 'flex' : 'none';
         }
 
         function startBenchmark() {
             try {
-                // NIEUW: Bepaal de definitieve payload grootte (Dropdown of Custom)
                 let selectedPayload = document.getElementById('payloadSize').value;
                 let finalPayloadSize = selectedPayload === 'custom' ? document.getElementById('customPayloadSize').value : selectedPayload;
 
                 const config = {
+                    brokerType: document.getElementById('brokerType').value,
                     brokerUrl: document.getElementById('brokerUrl').value,
+                    protocol: document.getElementById('protocol').value,
+                    channel: document.getElementById('channel').value,
                     username: document.getElementById('username').value,
                     password: document.getElementById('password').value,
-                    protocol: document.getElementById('protocol').value,
                     role: document.getElementById('role').value,
+                    queuePattern: document.getElementById('queuePattern').value,
+                    replyQueuePattern: document.getElementById('replyQueuePattern').value,
                     maxConnections: document.getElementById('maxConnections').value,
                     producerThreads: document.getElementById('producerThreads').value,
                     consumerThreads: document.getElementById('consumerThreads').value,
@@ -182,88 +262,44 @@
                     stopCondition: document.getElementById('stopCondition').value,
                     totalMessages: document.getElementById('totalMessages').value,
                     duration: document.getElementById('duration').value,
-                    payloadSize: finalPayloadSize, // Gebruikt nu de berekende waarde
+                    payloadSize: finalPayloadSize,
                     txEnabled: document.getElementById('txEnabled').value,
                     persistent: document.getElementById('persistent').value,
-                    purgeQueues: document.getElementById('purgeQueues').value
+                    purgeQueues: "true"
                 };
 
                 fetch('/api/benchmark/start', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(config)
-                }).then(response => {
-                    if (response.redirected && response.url.includes('/login')) {
-                        window.location.href = '/login.html'; return;
-                    }
-                    if (response.ok) {
+                }).then(res => {
+                    if (res.ok) {
                         document.getElementById('startBtn').style.display = 'none';
                         document.getElementById('stopBtn').style.display = 'block';
                         pollInterval = setInterval(fetchStats, 1000);
                     }
-                }).catch(err => alert("Network error reaching backend: " + err));
-            } catch (err) {
-                alert("Javascript error: " + err);
-            }
+                });
+            } catch (err) { alert(err); }
         }
 
         function stopBenchmark() {
-            document.getElementById('startBtn').style.display = 'block';
-            document.getElementById('stopBtn').style.display = 'none';
-            document.getElementById('timeRemaining').innerText = "";
-            document.getElementById('valStatus').innerText = "STOPPING...";
-            document.getElementById('valStatus').style.color = "#ff9800";
             clearInterval(pollInterval);
-
-            fetch('/api/benchmark/stop', { method: 'POST' })
-                .then(() => { fetchStats(); })
-                .catch(err => console.log("Stop request ignored: " + err));
+            fetch('/api/benchmark/stop', { method: 'POST' }).then(() => {
+                document.getElementById('startBtn').style.display = 'block';
+                document.getElementById('stopBtn').style.display = 'none';
+            });
         }
 
         function fetchStats() {
-    fetch('/api/benchmark/stats')
-        .then(res => {
-            if (res.redirected) { window.location.href = '/login.html'; return null; }
-            return res.json();
-        })
-        .then(data => {
-            if (data.running && data.purging) {
-                document.getElementById('valStatus').innerText = "PURGING...";
-                document.getElementById('valStatus').style.color = "#03A9F4";
-                document.getElementById('timeRemaining').innerText = "Purging old messages...";
-            } else if (data.running && !data.purging) {
-                document.getElementById('valStatus').innerText = "RUNNING";
-                document.getElementById('valStatus').style.color = "#4CAF50";
-                if (data.timeRemaining > 0) {
-                    document.getElementById('timeRemaining').innerText = "Remaining: " + data.timeRemaining + " sec";
-                } else {
-                    document.getElementById('timeRemaining').innerText = "";
-                }
-            } else if (data.stopping) {
-                document.getElementById('valStatus').innerText = "SHUTTING DOWN...";
-                document.getElementById('valStatus').style.color = "#ff9800";
-                document.getElementById('timeRemaining').innerText = "Finishing batches...";
-            } else {
-                document.getElementById('valStatus').innerText = "STOPPED";
-                document.getElementById('valStatus').style.color = "#f44336";
-                document.getElementById('timeRemaining').innerText = "";
-                if (document.getElementById('startBtn').style.display === 'none') {
-                    stopBenchmark(); 
-                }
-            }
-
-            document.getElementById('valProduced').innerText = data.produced.toLocaleString();
-            document.getElementById('valConsumed').innerText = data.consumed.toLocaleString();
-            document.getElementById('rateProduced').innerText = data.producedRate.toLocaleString() + " msg/s";
-            document.getElementById('rateConsumed').innerText = data.consumedRate.toLocaleString() + " msg/s";
-
-            if (data.logs && data.logs.length > 0) {
-                const terminal = document.getElementById('terminal');
-                terminal.innerHTML = data.logs.join('\n');
-                terminal.scrollTop = terminal.scrollHeight;
-            }
-        }).catch(e => console.log("Stats fetch error"));
-    }
+            fetch('/api/benchmark/stats').then(res => res.json()).then(data => {
+                document.getElementById('valStatus').innerText = data.stopping ? "STOPPING" : (data.running ? "RUNNING" : "STOPPED");
+                document.getElementById('valProduced').innerText = data.produced.toLocaleString();
+                document.getElementById('valConsumed').innerText = data.consumed.toLocaleString();
+                document.getElementById('rateProduced').innerText = data.producedRate + " msg/s";
+                document.getElementById('rateConsumed').innerText = data.consumedRate + " msg/s";
+                if (data.logs) document.getElementById('terminal').innerText = data.logs.join('\n');
+            });
+        }
     </script>
 </body>
 </html>
