@@ -25,7 +25,7 @@
 </head>
 <body>
     <div class="container">
-        <img src="logo.png" alt="MQ Benchmarker Logo" class="logo">
+        <img src="/logos/logo.png" alt="MQ Benchmarker Logo" class="logo">
         
         <div class="grid">
             <div class="card">
@@ -204,22 +204,22 @@
                 protocolSelect.innerHTML = '<option value="CORE">Artemis CORE</option><option value="AMQP">AMQP 1.0</option>';
                 brokerUrl.value = 'tcp://localhost:61616';
                 divChannel.style.display = 'none';
-                brokerLogo.src = 'logos/artemis.png';
+                brokerLogo.src = '/logos/artemis.png';
             } else if (type === 'ACTIVEMQ') {
                 protocolSelect.innerHTML = '<option value="OPENWIRE">OpenWire</option><option value="AMQP">AMQP 1.0</option>';
                 brokerUrl.value = 'tcp://localhost:61616';
                 divChannel.style.display = 'none';
-                brokerLogo.src = 'logos/activemq.png';
+                brokerLogo.src = '/logos/activemq.png';
             } else if (type === 'RABBITMQ') {
                 protocolSelect.innerHTML = '<option value="AMQP">AMQP 1.0</option>';
                 brokerUrl.value = 'amqp://localhost:5672';
                 divChannel.style.display = 'none';
-                brokerLogo.src = 'logos/rabbitmq.png';
+                brokerLogo.src = '/logos/rabbitmq.png';
             } else if (type === 'IBMMQ') {
                 protocolSelect.innerHTML = '<option value="MQI">MQI (Native)</option>';
                 brokerUrl.value = 'tcp://localhost:1414';
                 divChannel.style.display = 'flex';
-                brokerLogo.src = 'logos/ibmmq.png';
+                brokerLogo.src = '/logos/ibmmq.png';
             }
         }
 
