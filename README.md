@@ -1,6 +1,12 @@
 # 🚀 MQ Benchmarker
 
-A powerful, universal, and multi-protocol benchmark tool for MQ Brokers *(Version 0.2.2: Apache (ActiveMQ) Artemis only. Others will follow)*. Designed to stress-test your messaging infrastructure and find its bottlenecks via an intuitive web dashboard. It is recommended to setup Prometheus combined with Grafana or similar to investigate metrics.
+A simple, universal, multi-protocol benchmark tool for MQ Brokers *(Version 0.3.1: Apache (ActiveMQ) Artemis only. Others will follow)*. Designed to stress-test your messaging infrastructure and find its bottlenecks via an intuitive web dashboard. It is recommended to setup Prometheus combined with Grafana or similar to investigate metrics.
+
+Update 7 september 2026: *Work in Progress!*
+Backlog:
+- Adding the possibility to save connection details
+- Adding the possibility to add TLS (Both 1-way and 2 way, including a key/trusttore)
+- Adding the possibility to add a custom message header to test messages
 
 ## ✨ Features
 
